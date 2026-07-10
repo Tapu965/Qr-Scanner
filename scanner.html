@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Scanner</title>
+    <style>
+        *{box-sizing:border-box;margin:0;}
+        body{
+            font-family:system-ui,sans-serif;
+            background-color: #0b0b0b;
+            color:white;
+            display:flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding:20px;
+
+        }
+        .container{
+            background-color: #1e293b;
+            padding:30px;
+            border-radius: 24px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+
+
+        }
+        h1{
+            font-weight: 500;
+            margin-bottom: 20px;
+
+        }
+        #reader{
+            width: 100%;
+            aspect-ratio:1/1;
+            background-color: #0f172a;
+            border-radius: 15px;
+            overflow:hidden;
+            position: relative;
+        }
+        #reader video{
+            width: 100%;
+            height: 100%;
+            object-fit:cover;
+
+        }
+        #result{
+            margin-top:20px;
+            padding: 16px;
+            background: #0f172a;
+            border-radius: 12px;
+            word-break: break-all;
+            font-size: 14px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px dashed #475569;
+
+        }
+        .controls{
+            margin-top: 16px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        button{
+            background-color: #064d0a;
+            border: none;
+            border-radius: 40px;
+            padding: 10px 27px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            font-size: 15px;
+            transition: 0.2s;
+
+        }
+        button:hover{
+            background-color: #8b0bd0; transform: scale(1.02);
+        }
+        button:disabled{
+            opacity:0.4;
+            pointer-events: none;
+        }
+        .status{
+            margin-top:12px;
+            font-size:13px;
+            color:#94a3b8
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>QR Scanner</h1>
+        <div id="reader"></div>
+        <div id="result">point camera at a QR code</div>
+        <div class="controls">
+            <button id="startBtn">Start</button>
+            <button id="stopBtn">Stop</button>
+
+        </div>
+        <div class="status" id="status">Ready</div>
+    </div>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script>
+        let html5QrCode=null;
+        const readerEl=document.getElementById('reader');
+        const resultEl=document.getElementById("result");
+        const statusEl=document.getElementById("status");
+        const startBtn=document.getElementById("startBtn");
+        const stopBtn=document.getElementById("stopBtn");
+        function onScanSuccess(decodedText, decodedResult){
+            resultEl.innerHTML = `<strong>Scanned:</strong> ${decodedText}`;
+            statusEl.textContent='Scan successful!';
+            // if(html5QrCode) html5QrCode.stop();
+            
+        }
+        function onScanFailure(error){
+
+        }
+        startBtn.addEventListener('click',async ()=>{
+            if(html5QrCode){
+                try{
+                await html5QrCode.stop();
+                html5QrCode.clear();
+                }catch(_){}
+            }
+            html5QrCode=new Html5Qrcode("reader");
+            const config={
+                fps:15,
+                qrbox:{
+                    width:250,
+                    height:250,
+                    
+                },
+                aspectRatio:1.0
+            };
+            try{
+                statusEl.textContent='Starting camera...';
+                await html5QrCode.start(
+                    {
+                        facingMode:"environment"
+                    },
+                    config,
+                    onScanSuccess,
+                    onScanFailure
+                );
+                statusEl.textContent='camera active-Scan a qr code';
+            startBtn.disabled=true;
+            stopBtn.disabled=false; 
+            }catch(err){
+                statusEl.textContent=`Error ${err.message}||'camera access denied'}`;
+                resultEl.textContent='could not start camera';
+                startBtn.disabled=false;
+                stopBtn.disabled=true;
+            }
+        });
+        stopBtn.addEventListener('click',async()=>{
+        if(html5QrCode){
+            try{
+                await html5QrCode.stop();
+                html5QrCode.clear();
+                statusEl.textContent='Stopped';
+                resultEl.textContent='point camera at a Or code';
+                startBtn.disabled=false;
+                stopBtn.disabled=true;
+            }catch(_){}
+           
+        }
+        startBtn.disabled=false;
+        stopBtn.disabled=true;
+        });
+        stopBtn.disabled=true;
+    
+    </script>
+    
+</body>
+</html>
